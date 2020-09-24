@@ -1,25 +1,44 @@
 AmnesiacSquirrel
 ================
 
-TODO
-----
-* measure time needed to run each task
-* implement ThreatConnect
-
 Overview
 --------
 
 Collects IP address and domain name IOCs from various OSINT sources, performs deduplication, updates timestamps, 
 and remembers sources. Exports those IOCs to CSV for easy import into other analysis platforms.
 
-Supported sources:
+Supported sources (for the moment):
+
 1. AlienVault OTX: 
   - will extract IPv4 
   - will parse URLs to get IP addresses
   - will add hostname, domain and will parse non-IP URLs
 
-SQLite3 tables
---------------
+**NOTE**: source API keys must be supplied in a `keys.txt` file with this format, present in the same folder as `as.py`:
+`[api_keys]`
+`otx_api_key = 1234567890`
+`tc_api_key = 1234567890`
+
+Syntax
+------
+```
+as.py [-h] [--last-days DAYS] [--export {ipv4,domains}] [--update {all,otx}]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --last-days DAYS      Specify the max range of TI records to retrieve in
+                        days (days old) from sources. If not specified will
+                        attempt to retrieve all available.
+  --export {ipv4,domains}
+                        Will export the specified data to stdout, formatted as
+                        csv.
+  --update {all,otx}    Will update db with new records from the specified TI
+                        sources. The default action when no args are specified
+                        is to update all sources.
+```
+
+SQLite3 tables and db info
+--------------------------
 
 `tbl_ipv4iocs`
 | ip_addr | sources | added   | last_seen |comments |
