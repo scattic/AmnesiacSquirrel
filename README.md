@@ -15,9 +15,11 @@ Supported sources (for the moment):
   - will add hostname, domain and will parse non-IP URLs
 
 **NOTE**: source API keys must be supplied in a `keys.txt` file with this format, present in the same folder as `as.py`:
-`[api_keys]`
-`otx_api_key = 1234567890`
-`tc_api_key = 1234567890`
+```
+[api_keys]
+otx_api_key = 1234567890
+tc_api_key  = 1234567890
+```
 
 Syntax
 ------
