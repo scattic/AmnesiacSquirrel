@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "as.py",
       "console": "integratedTerminal",
-      "args": ["--export","ipv4"]
+      "args": ["--last-days","7"]
     }
   ]
 }

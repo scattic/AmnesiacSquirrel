@@ -4,9 +4,13 @@ import otx
 import sqlite3
 import datetime
 import argparse
+import ast
 
 dbconn = None # sqlite3 database
 dbcurs = None # sqlite3 cursor
+
+# some records statistics, reset for each new source
+source_statistics = { 'new_records' : 0, 'updated_records' : 0 }
 
 def print_logo():
   print(" ,;;:;,             ")
@@ -42,41 +46,61 @@ def init():
     print("INFO: table tbl_domainiocs not found, will now be created.")
     dbcurs.execute("CREATE TABLE tbl_domainiocs(domain text PRIMARY KEY, sources text, added text, last_seen text, comments text);")
 
+  """
+  CREATE UNIQUE INDEX "indx_domain" ON "tbl_domainiocs" ("domain");
+  CREATE INDEX "indx_ipv4" ON "tbl_ipv4iocs" ("ip_addr");
+  """
+
   dbconn.commit()
 
   return
 
 # receives a dict of IOCs and updates the database
 def db_update(iocs_dict):
+  
   global dbconn, dbcurs
-  # TODO: table name and primary key
+  
+  source_statistics["new_records"] = 0
+  source_statistics["updated_records"] = 0
+
   for ioc in iocs_dict:
+
+    ioc = str(ioc)
+    timestamp = str(iocs_dict[ioc]['timestamp'])
+    comments = str(iocs_dict[ioc]['comments'])
+
+    table_name = None
+    primary_key = None 
+
     if iocs_dict[ioc]['type'] == 'ip':
-      dbcurs.execute(f"SELECT * FROM tbl_ipv4iocs WHERE ip_addr='{ioc}';")
-      rows = dbcurs.fetchall()
-      source = iocs_dict[ioc]['source']
-      timestamp = iocs_dict[ioc]['timestamp']
-      comments = iocs_dict[ioc]['comments']
-      if len(rows)==1:
-        # TODO: we could consider only updating if there are changes, but...
-        dbcurs.execute(f"UPDATE tbl_ipv4iocs SET sources='{source}', last_seen='{timestamp}',comments='{comments}' WHERE ip_addr='{ioc}';")
-        dbconn.commit()
-      else:
-        dbcurs.execute(f"INSERT INTO tbl_ipv4iocs VALUES('{ioc}','{source}','{timestamp}','{timestamp}','{comments}');")
-        dbconn.commit()
+      table_name = "tbl_ipv4iocs"
+      primary_key = "ip_addr"
+
     if iocs_dict[ioc]['type'] == 'domain':
-      dbcurs.execute(f"SELECT * FROM tbl_domainiocs WHERE domain='{ioc}';")
-      rows = dbcurs.fetchall()
-      source = iocs_dict[ioc]['source']
-      timestamp = iocs_dict[ioc]['timestamp']
-      comments = iocs_dict[ioc]['comments']
-      if len(rows)==1:
-        # TODO: we could consider only updating if there are changes, but...
-        dbcurs.execute(f"UPDATE tbl_domainiocs SET sources='{source}', last_seen='{timestamp}',comments='{comments}' WHERE domain='{ioc}';")
-        dbconn.commit()
-      else:
-        dbcurs.execute(f"INSERT INTO tbl_domainiocs VALUES('{ioc}','{source}','{timestamp}','{timestamp}','{comments}');")
-        dbconn.commit()      
+      table_name = "tbl_domainiocs"
+      primary_key = "domain"
+
+    dbcurs.execute(f"SELECT sources FROM {table_name} WHERE {primary_key}=?;",(ioc,))
+    rows = dbcurs.fetchone()
+    
+    if not rows == None:
+      source = ast.literal_eval(rows[0])
+      if not isinstance(source,list):
+        source.append(rows[0])
+      if not iocs_dict[ioc]['source'] in source:
+        source.append(iocs_dict[ioc]['source'])
+      source = repr(source)
+      dbcurs.execute(f"UPDATE {table_name} SET sources=?, last_seen=?,comments=? WHERE {primary_key}=?;",(source,timestamp,comments,ioc))
+      source_statistics["updated_records"] += 1
+    
+    else:
+      source = []
+      source.append(iocs_dict[ioc]['source'])
+      source = repr(source) 
+      dbcurs.execute(f"INSERT INTO {table_name} VALUES(?,?,?,?,?);",(ioc,source,timestamp,timestamp,comments))
+      source_statistics["new_records"] += 1
+  
+  dbconn.commit()
   return 
 
 # print several database statistics
@@ -89,14 +113,15 @@ def db_export(what):
   global dbconn, dbcurs
   if 'ipv4' in what:
     sqlcmd = (f"SELECT ip_addr FROM tbl_ipv4iocs;")
+    print("IPv4,")
   if 'domains' in what:
     sqlcmd = (f"SELECT domain FROM tbl_domainiocs;")
+    print("DOMAIN,")
   
   dbcurs.execute(sqlcmd)
   rows = dbcurs.fetchall()
   for row in rows:
     print(f"{row[0]},")
-
 
 def main():
   
@@ -127,12 +152,13 @@ def main():
       print('📅 time is of the essence, especially the last {} days'.format(args.days))
       otx.modified_since = datetime.datetime.now() - datetime.timedelta(days=args.days)
     if ('all' in args.update) or ('otx' in args.update):
-      print("🐿️  is going nuts about OTX...")
+      print("🐿️  is nuts about OTX...")
       iocs = otx.get_iocs()
     # update the database
     print("🌳 sorting nuts and keeping the tasty ones")
     db_update(iocs)
-    print("🐿️  is now tired, bye")
+    print("🌳 {} nuts added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+    print("🐿️  is now tired, bye")  
     return 
 
 main()

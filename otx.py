@@ -165,7 +165,7 @@ def get_and_parse():
           #wr.writerow([what,out])
 
     current_pulse = current_pulse + 1
-    # if current_pulse > 10: return
+    #if current_pulse > 10: return
 
   pbar.finish()
 
