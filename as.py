@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 
-import otx
 import sqlite3
 import datetime
 import argparse
 import ast
+
+import otx
+import tor 
+import botvrij
 
 dbconn = None # sqlite3 database
 dbcurs = None # sqlite3 cursor
@@ -133,13 +136,12 @@ def main():
 
   argparser = argparse.ArgumentParser()
   argparser.add_argument('--last-days', dest='days', default=None, type=int,
-                           help='Specify the max range of TI records to retrieve in days (days old) from sources. If not specified will attempt to retrieve all available.')
+                           help='Specify the max range of TI records to retrieve in days (days old) from sources. Does not apply to all sources. If not specified will attempt to retrieve all available.')
   argparser.add_argument('--export', dest='export', default=None, choices=['ipv4','domains'], type=str, 
                            help='Will export the specified data to stdout, formatted as csv.')
-  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx'], type=str,
+  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','tor','botvrij'], type=str,
                            help='Will update db with new records from the specified TI sources. The default action when no args are specified is to update all sources.')
   args = argparser.parse_args()
-
 
   # export data from database
   if args.export:
@@ -151,13 +153,30 @@ def main():
     if args.days:
       print('📅 time is of the essence, especially the last {} days'.format(args.days))
       otx.modified_since = datetime.datetime.now() - datetime.timedelta(days=args.days)
+
     if ('all' in args.update) or ('otx' in args.update):
       print("🐿️  is nuts about OTX...")
       iocs = otx.get_iocs()
-    # update the database
-    print("🌳 sorting nuts and keeping the tasty ones")
-    db_update(iocs)
-    print("🌳 {} nuts added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+      # update the database
+      print("🌳 sorting nuts and keeping the tasty ones")
+      db_update(iocs)
+      print("🌳 {} nuts added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+
+    if ('all' in args.update) or ('tor' in args.update):
+      print("🐿️  is not fond of onions but will get some anyways...")
+      iocs = tor.get_iocs()
+      print("🌳 sorting onions and keeping the tasty ones")
+      db_update(iocs)
+      print("🌳 {} onions added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+
+    if ('all' in args.update) or ('botvrij' in args.update):
+      print("🐿️  getting some dutch tulips...")
+      iocs = botvrij.get_iocs()
+      print("🌷 sorting tulips and keeping the fancy ones")
+      db_update(iocs)
+      print("🌷 {} tulips added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+
+
     print("🐿️  is now tired, bye")  
     return 
 

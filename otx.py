@@ -132,7 +132,9 @@ def get_and_parse():
       
       # sometimes host names can have subdomains
       elif i['type'].find('hostname')>=0:
-        nameregex = re.search("(?P<subdomain>[a-z0-9\-\.]*\.)*(?P<domain>[a-z0-9\-]+\.[a-z]{2,63}){1}",i['indicator'])
+        # difficult to handle .co.uk, .com.pl type of TLDs
+        # nameregex = re.search("(?P<subdomain>[a-z0-9\-\.]*\.)*(?P<domain>[a-z0-9\-]+\.[a-z]{2,63}){1}",i['indicator'])
+        nameregex = re.search("(?P<domain>[a-z0-9\-\.]{1,63})",i['indicator'])
         if nameregex is not None:
           if nameregex.group('domain') is not None:
             out = nameregex.group('domain')

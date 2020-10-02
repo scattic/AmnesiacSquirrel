@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "as.py",
       "console": "integratedTerminal",
-      "args": ["--last-days","7"]
+      "args": ["--update","botvrij"]
     }
   ]
 }
