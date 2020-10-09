@@ -67,7 +67,8 @@ SQLite3 tables and db info
 DB Browser for SQLite app from Snap store
 
 #### References
-https://github.com/threat-hunting/awesome-threat-intelligence
-www.threat-intel.xyz
-https://github.com/sroberts/awesome-iocs
-http://iplists.firehol.org -> https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/master/firehol_level1.netset
+- www.threat-intel.xyz
+- https://github.com/threat-hunting/awesome-threat-intelligence
+- https://github.com/sroberts/awesome-iocs
+- http://iplists.firehol.org -> https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/master/firehol_level1.netset
+- https://bgpranking.circl.lu/

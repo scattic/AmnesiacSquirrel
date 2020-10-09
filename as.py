@@ -6,9 +6,23 @@ import argparse
 import ast
 
 import otx
-import tor 
 import botvrij
-import talos
+import plain
+
+sources = { # plain text sources, one IP per line
+  "talos":"https://talosintelligence.com/documents/ip-blacklist",
+  "alienvault-iprep":"https://reputation.alienvault.com/reputation.generic",
+  "binarydefence":"https://www.binarydefense.com/banlist.txt",
+  "bitcoin-nodes":"https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes_1d.ipset",
+  "blocklist.de":"https://lists.blocklist.de/lists/all.txt",
+  "cinsscore":"http://cinsscore.com/list/ci-badguys.txt",
+  "emerging-threats":"http://rules.emergingthreats.net/open/suricata/rules/compromised-ips.txt",
+  "sans":"https://isc.sans.edu/feeds/topips.txt",
+  "spys.me":"http://spys.me/proxy.txt",
+  "abuse.ch":"https://urlhaus.abuse.ch/downloads/text/",
+  "feodo-traker":"https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
+  "tor":"https://check.torproject.org/torbulkexitlist"
+}
 
 dbconn = None # sqlite3 database
 dbcurs = None # sqlite3 cursor
@@ -140,7 +154,7 @@ def main():
                            help='Specify the max range of TI records to retrieve in days (days old) from sources. Does not apply to all sources. If not specified will attempt to retrieve all available.')
   argparser.add_argument('--export', dest='export', default=None, choices=['ipv4','domains'], type=str, 
                            help='Will export the specified data to stdout, formatted as csv.')
-  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','tor','botvrij','talos'], type=str,
+  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','botvrij','plain'], type=str,
                            help='Will update db with new records from the specified TI sources. The default action when no args are specified is to update all sources.')
   args = argparser.parse_args()
 
@@ -152,40 +166,31 @@ def main():
   if args.update:
     print_logo() 
     if args.days:
-      print('📅 time is of the essence, especially the last {} days'.format(args.days))
+      print('📅 filtering on changes from last {} days, when possible'.format(args.days))
       otx.modified_since = datetime.datetime.now() - datetime.timedelta(days=args.days)
 
     if ('all' in args.update) or ('otx' in args.update):
-      print("🐿️  is nuts about OTX...")
+      print("🔎 querying OTX...")
       iocs = otx.get_iocs()
-      # update the database
-      print("🌳 sorting nuts and keeping the tasty ones")
       db_update(iocs)
-      print("🌳 {} nuts added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
-    if ('all' in args.update) or ('tor' in args.update):
-      print("🐿️  is not fond of onions but will get some anyways...")
-      iocs = tor.get_iocs()
-      print("🌳 sorting onions and keeping the tasty ones")
-      db_update(iocs)
-      print("🌳 {} onions added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
 
     if ('all' in args.update) or ('botvrij' in args.update):
-      print("🐿️  getting some dutch tulips...")
+      print("🔎 querying Botvrij...")
       iocs = botvrij.get_iocs()
-      print("🌷 sorting tulips and keeping the fancy ones")
       db_update(iocs)
-      print("🌷 {} tulips added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
-
-    if ('all' in args.update) or ('talos' in args.update):
-      print("🐿️  is learning for the CCNA exam...")
-      iocs = talos.get_iocs()
-      print("🌳 checking exam simulation responses")
-      db_update(iocs)
-      print("🌳 {} interesting questions, and {} quite dull".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
-    print("🐿️  is now tired, bye")  
+    if ('all' in args.update) or ('plain' in args.update):
+      for source_name in sources.keys():
+        print("🔎 querying {}...".format(source_name))
+        iocs = plain.get_iocs(source_name,sources[source_name])
+        db_update(iocs)
+        print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+
+    print("🚪 finished processing. You can now export the results with --export.")  
     return 
 
 main()
