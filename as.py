@@ -8,6 +8,7 @@ import ast
 import otx
 import tor 
 import botvrij
+import talos
 
 dbconn = None # sqlite3 database
 dbcurs = None # sqlite3 cursor
@@ -139,7 +140,7 @@ def main():
                            help='Specify the max range of TI records to retrieve in days (days old) from sources. Does not apply to all sources. If not specified will attempt to retrieve all available.')
   argparser.add_argument('--export', dest='export', default=None, choices=['ipv4','domains'], type=str, 
                            help='Will export the specified data to stdout, formatted as csv.')
-  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','tor','botvrij'], type=str,
+  argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','tor','botvrij','talos'], type=str,
                            help='Will update db with new records from the specified TI sources. The default action when no args are specified is to update all sources.')
   args = argparser.parse_args()
 
@@ -175,6 +176,13 @@ def main():
       print("🌷 sorting tulips and keeping the fancy ones")
       db_update(iocs)
       print("🌷 {} tulips added, and {} kept".format(source_statistics['new_records'],source_statistics['updated_records']))
+
+    if ('all' in args.update) or ('talos' in args.update):
+      print("🐿️  is learning for the CCNA exam...")
+      iocs = talos.get_iocs()
+      print("🌳 checking exam simulation responses")
+      db_update(iocs)
+      print("🌳 {} interesting questions, and {} quite dull".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
     print("🐿️  is now tired, bye")  
