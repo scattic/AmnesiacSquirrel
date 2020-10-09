@@ -10,18 +10,18 @@ import botvrij
 import plain
 
 sources = { # plain text sources, one IP per line
-  "talos":"https://talosintelligence.com/documents/ip-blacklist",
-  "alienvault-iprep":"https://reputation.alienvault.com/reputation.generic",
-  "binarydefence":"https://www.binarydefense.com/banlist.txt",
-  "bitcoin-nodes":"https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes_1d.ipset",
-  "blocklist.de":"https://lists.blocklist.de/lists/all.txt",
-  "cinsscore":"http://cinsscore.com/list/ci-badguys.txt",
-  "emerging-threats":"http://rules.emergingthreats.net/open/suricata/rules/compromised-ips.txt",
-  "sans":"https://isc.sans.edu/feeds/topips.txt",
-  "spys.me":"http://spys.me/proxy.txt",
-  "abuse.ch":"https://urlhaus.abuse.ch/downloads/text/",
-  "feodo-traker":"https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
-  "tor":"https://check.torproject.org/torbulkexitlist"
+  "Cisco Talos Bad IP List":"https://talosintelligence.com/documents/ip-blacklist",
+  "AlienVault IP Reputation":"https://reputation.alienvault.com/reputation.generic",
+  "BinaryDefence":"https://www.binarydefense.com/banlist.txt",
+  "Bitcoin-nodes":"https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/bitcoin_nodes_1d.ipset",
+  "Blocklist.de":"https://lists.blocklist.de/lists/all.txt",
+  "CINSscore":"http://cinsscore.com/list/ci-badguys.txt",
+  "Proofpoint EmergingThreats":"http://rules.emergingthreats.net/open/suricata/rules/compromised-ips.txt",
+  "SANS Top Bad IPs":"https://isc.sans.edu/feeds/topips.txt",
+  "Spys.me Proxy List":"http://spys.me/proxy.txt",
+  "Abuse.ch URLhaus":"https://urlhaus.abuse.ch/downloads/text/",
+  "Abuse.ch C2 Traker":"https://feodotracker.abuse.ch/downloads/ipblocklist.txt",
+  "Tor Exit Nodes":"https://check.torproject.org/torbulkexitlist"
 }
 
 dbconn = None # sqlite3 database
@@ -132,14 +132,18 @@ def db_export(what):
   if 'ipv4' in what:
     sqlcmd = (f"SELECT ip_addr FROM tbl_ipv4iocs;")
     print("IPv4,")
+    dbcurs.execute(sqlcmd)
+    rows = dbcurs.fetchall()
+    for row in rows:
+      print(f"{row[0]},")
+
   if 'domains' in what:
     sqlcmd = (f"SELECT domain FROM tbl_domainiocs;")
     print("DOMAIN,")
-  
-  dbcurs.execute(sqlcmd)
-  rows = dbcurs.fetchall()
-  for row in rows:
-    print(f"{row[0]},")
+    dbcurs.execute(sqlcmd)
+    rows = dbcurs.fetchall()
+    for row in rows:
+      print(f"{row[0]},")  
 
 def main():
   
@@ -152,8 +156,8 @@ def main():
   argparser = argparse.ArgumentParser()
   argparser.add_argument('--last-days', dest='days', default=None, type=int,
                            help='Specify the max range of TI records to retrieve in days (days old) from sources. Does not apply to all sources. If not specified will attempt to retrieve all available.')
-  argparser.add_argument('--export', dest='export', default=None, choices=['ipv4','domains'], type=str, 
-                           help='Will export the specified data to stdout, formatted as csv.')
+  argparser.add_argument('--export', dest='export', default=None, choices=['tagged-ipv4','ipv4','domains'], type=str, 
+                           help='Will export the specified data to stdout, formatted as csv. Tagged version also include list of sources and notes if available.')
   argparser.add_argument('--update', dest='update', default='all', choices=['all','otx','botvrij','plain'], type=str,
                            help='Will update db with new records from the specified TI sources. The default action when no args are specified is to update all sources.')
   args = argparser.parse_args()
@@ -173,14 +177,14 @@ def main():
       print("🔎 querying OTX...")
       iocs = otx.get_iocs()
       db_update(iocs)
-      print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
     if ('all' in args.update) or ('botvrij' in args.update):
       print("🔎 querying Botvrij...")
       iocs = botvrij.get_iocs()
       db_update(iocs)
-      print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
     if ('all' in args.update) or ('plain' in args.update):
@@ -188,7 +192,7 @@ def main():
         print("🔎 querying {}...".format(source_name))
         iocs = plain.get_iocs(source_name,sources[source_name])
         db_update(iocs)
-        print("✔ {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+        print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
     print("🚪 finished processing. You can now export the results with --export.")  
     return 
