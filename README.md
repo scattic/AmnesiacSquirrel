@@ -13,8 +13,19 @@ Supported sources (for the moment):
   - will extract IPv4 
   - will parse URLs to get IP addresses
   - will add hostname, domain and will parse non-IP URLs
-2. TOR Exit nodes
-3. Botvrij.eu lists (hostnames, urls, ip addresses, domains)
+2. Botvrij.eu lists (hostnames, urls, ip addresses, domains).
+3. Cisco Talos Bad IP List.
+4. AlienVault IP Reputation.
+5. BinaryDefence.
+6. Bitcoin-nodes.
+7. Blocklist.de.
+8. CINSscore.
+9. Proofpoint EmergingThreats.
+10. SANS Top Bad IPs.
+11. Spys.me Proxy List.
+12. Abuse.ch URLhaus, IP addresses only
+13. Abuse.ch C2 Traker.
+14. Tor Exit Nodes.
 
 **NOTE**: source API keys must be supplied in a `keys.txt` file with this format, present in the same folder as `as.py`:
 ```
