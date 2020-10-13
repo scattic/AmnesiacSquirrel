@@ -1,6 +1,8 @@
 AmnesiacSquirrel
 ================
 
+<img src="pic.png" width="500">
+
 Overview
 --------
 
