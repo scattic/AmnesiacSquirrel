@@ -31,14 +31,14 @@ dbcurs = None # sqlite3 cursor
 source_statistics = { 'new_records' : 0, 'updated_records' : 0 }
 
 def print_logo():
-  print(" ,;;:;,             ")
+  print("\033[36m ,;;:;,             ")
   print("   ;;;;;            ")
   print("  ,:;;:;    ,'=.      aMn3$iaC Squ1r^el")
   print("  ;:;:;' .=\" ,'_\  ")
   print("  ':;:;,/  ,__:=@     -- gathering IOCs since 2020")
   print("   ';;:;  =./)_     ")
   print("     `\"=\_  )_\"`    ")
-  print("          ``'\"`     ")
+  print("          ``'\"`     \033[39m")
 
 def init():
   
@@ -170,31 +170,31 @@ def main():
   if args.update:
     print_logo() 
     if args.days:
-      print('📅 filtering on changes from last {} days, when possible'.format(args.days))
+      print('\033[35m📅\033[39m filtering on changes from last {} days, when possible'.format(args.days))
       otx.modified_since = datetime.datetime.now() - datetime.timedelta(days=args.days)
 
     if ('all' in args.update) or ('otx' in args.update):
-      print("🔎 querying OTX...")
+      print("\033[35m🔎\033[39m querying OTX",end="")
       iocs = otx.get_iocs()
       db_update(iocs)
-      print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("… ▶ \033[32m{}\033[39m new IOCs, \033[33m{}\033[39m updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
     if ('all' in args.update) or ('botvrij' in args.update):
-      print("🔎 querying Botvrij...")
+      print("\033[35m🔎\033[39m querying Botvrij",end="")
       iocs = botvrij.get_iocs()
       db_update(iocs)
-      print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+      print("… ▶ \033[32m{}\033[39m new IOCs, \033[33m{}\033[39m updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
 
     if ('all' in args.update) or ('plain' in args.update):
       for source_name in sources.keys():
-        print("🔎 querying {}...".format(source_name))
+        print("\033[35m🔎\033[39m querying {}".format(source_name),end="")
         iocs = plain.get_iocs(source_name,sources[source_name])
         db_update(iocs)
-        print("…… {} new IOCs, {} updated".format(source_statistics['new_records'],source_statistics['updated_records']))
+        print("… ▶ \033[32m{}\033[39m new IOCs, \033[33m{}\033[39m updated".format(source_statistics['new_records'],source_statistics['updated_records']))
 
-    print("🚪 finished processing. You can now export the results with --export.")  
+    print("\033[35m🚪\033[39m finished processing. You can now export the results with --export.")  
     return 
 
 main()
